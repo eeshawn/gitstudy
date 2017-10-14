@@ -3,4 +3,4 @@ git study
 add one line here!
 creat a new branch.
 diff
-another branch is quick & simple.
+another branch is quick and simple.
