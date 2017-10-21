@@ -1,0 +1,203 @@
+﻿git command summarized from: https://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000
+-----------------------------------------
+----
+----
+----
+msysgit是Windows版的Git，从https://git-for-windows.github.io下载
+安装完成后，还需要最后一步设置，在命令行输入：
+$ git config --global user.name "Your Name"
+$ git config --global user.email "email@example.com"
+
+$ mkdir learngit
+$ cd learngit
+$ pwd
+
+$ git init  通过git init命令把这个目录变成Git可以管理的仓库
+
+千万不要使用Windows自带的记事本编辑任何文本文件。
+原因是Microsoft开发记事本的团队使用了一个非常弱智的行为来保存UTF-8编码的文件，
+他们自作聪明地在每个文件开头添加了0xefbbbf（十六进制）的字符，你会遇到很多不可思议的问题，
+比如，网页第一行可能会显示一个“?”，明明正确的程序一编译就报语法错误，等等，
+都是由记事本的弱智行为带来的。建议你下载Notepad++代替记事本，不但功能强大，而且免费！
+记得把Notepad++的默认编码设置为UTF-8 without BOM即可：
+
+$ git add readme.txt
+$ git commit -m "wrote a readme file"
+
+初始化一个Git仓库，使用git init命令。
+添加文件到Git仓库，分两步：
+第一步，使用命令git add <file>，注意，可反复多次使用，添加多个文件；
+第二步，使用命令git commit，完成。
+
+要随时掌握工作区的状态，使用git status命令。
+如果git status告诉你有文件被修改过，用git diff可以查看修改内容。
+
+HEAD指向的版本就是当前版本，因此，Git允许我们在版本的历史之间穿梭，使用命令git reset --hard commit_id。
+穿梭前，用git log可以查看提交历史，以便确定要回退到哪个版本。
+要重返未来，用git reflog查看命令历史，以便确定要回到未来的哪个版本。
+
+每次修改，如果不add到暂存区，那就不会加入到commit中。
+
+撤销修改：
+场景1：当你改乱了工作区某个文件的内容，想直接丢弃工作区的修改时，用命令git checkout -- file。
+场景2：当你不但改乱了工作区某个文件的内容，还添加到了暂存区时，想丢弃修改，分两步，第一步用命令git reset HEAD file，就回到了场景1，第二步按场景1操作。
+场景3：已经提交了不合适的修改到版本库时，想要撤销本次提交，参考版本回退一节，不过前提是没有推送到远程库。
+
+-------与GitHub的连接-------
+由于你的本地Git仓库和GitHub仓库之间的传输是通过SSH加密的，所以，需要一点设置：
+第1步：创建SSHKey。在用户主目录下，看看有没有.ssh目录，如果有，再看看这个目录下有没有id_rsa和id_rsa.pub这两个文件，
+如果已经有了，可直接跳到下一步。如果没有，打开Shell（Windows下打开Git Bash），创建SSH Key：
+$ ssh-keygen -t rsa -C "youremail@example.com"
+你需要把邮件地址换成你自己的邮件地址，然后一路回车，使用默认值即可，由于这个Key也不是用于军事目的，所以也无需设置密码。
+如果一切顺利的话，可以在用户主目录里找到.ssh目录，里面有id_rsa和id_rsa.pub两个文件，
+这两个就是SSH Key的秘钥对，id_rsa是私钥，不能泄露出去，id_rsa.pub是公钥，可以放心地告诉任何人。
+第2步：登陆GitHub，打开“Account settings”，“SSH Keys”页面：
+然后，点“Add SSH Key”，填上任意Title，在Key文本框里粘贴id_rsa.pub文件的内容
+
+要关联一个远程库，使用命令$git remote add origin git@server-name:path/repo-name.git
+关联后，第一次推送master分支的所有内容使用命令:
+$ git push -u origin master    
+此后，每次本地提交后，只要有必要，就可以使用命令:
+$ git push origin master
+要克隆一个仓库，首先必须知道仓库的地址，然后使用git clone命令克隆:
+$ git clone git@server-name:path/repo-name.git
+
+Git鼓励大量使用分支：
+查看分支：git branch
+创建分支：git branch <name>
+切换分支：git checkout <name>
+创建+切换分支：git checkout -b <name>
+合并某分支到当前分支：git merge <name>
+删除分支：git branch -d <name>
+
+当Git无法自动合并分支时，就必须首先解决冲突。解决冲突后，再提交，合并完成:
+$ git log --graph --pretty=oneline --abbrev-commit
+
+----------分支策略----------
+在实际开发中，我们应该按照几个基本原则进行分支管理：
+首先，master分支应该是非常稳定的，也就是仅用来发布新版本，平时不能在上面干活；
+那在哪干活呢？干活都在dev分支上，也就是说，dev分支是不稳定的，
+到某个时候，比如1.0版本发布时，再把dev分支合并到master上，在master分支发布1.0版本；
+你和你的小伙伴们每个人都在dev分支上干活，每个人都有自己的分支，时不时地往dev分支上合并就可以了。
+
+-------------bug分支-------------
+修复bug时，我们会通过创建新的bug分支进行修复，然后合并，最后删除；
+当手头工作没有完成时，先把工作现场git stash一下，然后去修复bug，修复后，再git stash pop，回到工作现场。
+首先确定要在哪个分支上修复bug，假定需要在master分支上修复，就从master创建临时分支：
+$ git checkout master
+$ git checkout -b issue-101
+修复完成后，提交, 切换到master分支，并完成合并，最后删除issue-101分支：
+$ git add readme.txt 
+$ git commit -m "fix bug 101"
+$ git checkout master
+$ git merge --no-ff -m "merged bug fix 101" issue-101
+$ git branch -d issue-101
+现在，是时候接着回到dev分支干活了！
+工作区是干净的，刚才的工作现场存到哪去了？用git stash list命令看看：
+$ git stash list
+stash@{0}: WIP on dev: 6224937 add merge
+作现场还在，Git把stash内容存在某个地方了，但是需要恢复一下，有两个办法：
+一是用git stash apply恢复，但是恢复后，stash内容并不删除，你需要用git stash drop来删除；
+另一种方式是用git stash pop，恢复的同时把stash内容也删了：
+$ git stash pop
+再用git stash list查看，就看不到任何stash内容了
+可以多次stash，恢复的时候，先用git stash list查看，然后恢复指定的stash，用命令：
+$ git stash apply stash@{0}
+
+----Feature分支-------
+你终于接到了一个新任务：开发代号为Vulcan的新功能，该功能计划用于下一代星际飞船。
+于是准备开发：
+$ git checkout -b feature-vulcan
+开发完毕：
+$ git add vulcan.py
+$ git commit -m "add feature vulcan"
+切回dev，准备合并：
+$ git checkout dev
+一切顺利的话，feature分支和bug分支是类似的，合并，然后删除。
+但是，就在此时，接到上级命令，因经费不足，新功能必须取消！
+Git友情提醒，feature-vulcan分支还没有被合并，如果删除，将丢失掉修改，
+如果要强行删除，需要使用命令:
+$ git branch -D feature-vulcan
+
+------多人协作---------
+master分支是主分支，因此要时刻与远程同步；
+dev分支是开发分支，团队所有成员都需要在上面工作，所以也需要与远程同步；
+在Git中，其他分支完全可以在本地自己藏着玩，是否推送，视你的心情而定！
+多人协作时，大家都会往master和dev分支上推送各自的修改。
+当你的小伙伴从远程库clone时，默认情况下，你的小伙伴只能看到本地的master分支。
+现在，你的小伙伴要在dev分支上开发，就必须创建远程origin的dev分支到本地，
+于是他用这个命令创建本地dev分支：
+$ git checkout -b dev origin/dev
+你的小伙伴已经向origin/dev分支推送了他的提交，而碰巧你也对同样的文件作了修改，并试图推送：
+推送失败，因为你的小伙伴的最新提交和你试图推送的提交有冲突，
+解决办法也很简单，先用git pull把最新的提交从origin/dev抓下来，然后，在本地合并，解决冲突，再推送：
+git pull也失败了，原因是没有指定本地dev分支与远程origin/dev分支的链接，
+根据提示，设置dev和origin/dev的链接：
+$ git branch --set-upstream dev origin/dev
+再pull：$ git pull
+这回git pull成功，但是合并有冲突，需要手动解决，
+解决的方法和分支管理中的解决冲突完全一样。解决后，提交，再push
+
+因此，多人协作的工作模式通常是这样：
+首先，可以试图用git push origin branch-name推送自己的修改；
+如果推送失败，则因为远程分支比你的本地更新，需要先用git pull试图合并；
+如果合并有冲突，则解决冲突，并在本地提交；
+没有冲突或者解决掉冲突后，再用git push origin branch-name推送就能成功！
+如果git pull提示“no tracking information”，则说明本地分支和远程分支的链接关系没有创建，
+用命令git branch --set-upstream branch-name origin/branch-name。
+这就是多人协作的工作模式，一旦熟悉了，就非常简单。
+在本地创建和远程分支对应的分支，使用git checkout -b branch-name origin/branch-name，本地和远程分支的名称最好一致；
+
+----------标签---------
+在Git中打标签非常简单，首先，切换到需要打标签的分支上：
+然后，敲命令git tag <name>就可以打一个新标签
+$ git tag v1.0
+默认标签是打在最新提交的commit上的。有时候，如果忘了打标签
+方法是找到历史提交的commit id，然后打上就可以了：
+$ git tag v0.9 6224937
+可以用git show <tagname>查看标签信息：
+还可以创建带有说明的标签，用-a指定标签名，-m指定说明文字：
+$ git tag -a v0.1 -m "version 0.1 released" 3628164
+删除本地标签：
+$ git tag -d v0.1
+Deleted tag 'v0.1' (was e078af9)
+如果要推送某个标签到远程，使用命令git push origin <tagname>：
+$ git push origin v1.0
+或者，一次性推送全部尚未推送到远程的本地标签：
+$ git push origin --tags
+如果标签已经推送到远程，要删除远程标签就麻烦一点，先从本地删除：
+$ git tag -d v0.9
+然后，从远程删除。删除命令也是push，但是格式如下：
+$ git push origin :refs/tags/v0.9
+
+----------忽略特殊文件--------
+在Git工作区的根目录下创建一个特殊的.gitignore文件，
+然后把要忽略的文件名填进去，Git就会自动忽略这些文件。
+不需要从头写.gitignore文件，GitHub已经为我们准备了各种配置文件，
+只需要组合一下就可以使用了。所有配置文件可以直接在线浏览：https://github.com/github/gitignore
+有些时候，你想添加一个文件到Git，但发现添加不了，原因是这个文件被.gitignore忽略了
+如果你确实想添加该文件，可以用-f强制添加到Git：
+$ git add -f App.class
+或者你发现，可能是.gitignore写得有问题，需要找出来到底哪个规则写错了，
+可以用git check-ignore命令检查：
+$ git check-ignore -v App.class
+.gitignore:3:*.class    App.class
+Git会告诉我们，.gitignore的第3行规则忽略了该文件，于是我们就可以知道应该修订哪个规则。
+.gitignore文件本身要放到版本库里，并且可以对.gitignore做版本管理！
+
+------配置别名--------强大的偷懒
+我们只需要敲一行命令，告诉Git，以后st就表示status：
+$ git config --global alias.st status
+当然还有别的命令可以简写，很多人都用co表示checkout，ci表示commit，br表示branch：
+$ git config --global alias.co checkout
+$ git config --global alias.ci commit
+$ git config --global alias.br branch
+命令git reset HEAD file可以把暂存区的修改撤销掉（unstage），重新放回工作区
+$ git config --global alias.unstage 'reset HEAD'
+甚至还有人丧心病狂地把lg配置成了：（牛逼配置）
+git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
+
+配置Git的时候，加上--global是针对当前用户起作用的，如果不加，那只针对当前的仓库起作用。
+配置文件放哪了？每个仓库的Git配置文件都放在.git/config文件中：
+$ cat .git/config 
+别名就在[alias]后面，要删除别名，直接把对应的行删掉即可。
